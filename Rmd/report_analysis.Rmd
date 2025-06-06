@@ -1,7 +1,7 @@
 ---
 title: "Analysis"
 output: 
-  html_document: #descomentar
+  html_document:
     toc: yes
 editor_options: 
   chunk_output_type: console
@@ -57,9 +57,10 @@ Tabla 1. Descripción de la tabla 1. Tabla 2. ...
 
 
 table1 = DF |>
-  dplyr::select(where(is.numeric), -id, -Goodbye_DIRt) |> 
+  mutate(DEMOGR_edad_DIRd = as.numeric(DEMOGR_edad_DIRd)) |> 
+  dplyr::select(where(is.numeric), -id, DEMOGR_genero_DIRd, -Consent_DIRt, -DEMOGR_comuna_DIRd) |> 
   gtsummary::tbl_summary(
-    by = DEMOGR_comuna_DIRd,
+    by = DEMOGR_genero_DIRd, #DEMOGR_genero_DIRd
     type = list(everything() ~ 'continuous')
     )
 
