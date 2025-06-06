@@ -84,6 +84,10 @@ plot1 =
 
 plot1
 
+
+  ggplot(DF, aes(DEMOGR_genero_DIRd, SBS_DIRt)) + 
+    geom_violin(alpha = .2, aes(fill = DEMOGR_genero_DIRd), draw_quantiles = .5) +
+    geom_jitter(alpha = .1, height = 0, width = .2)
 ```
 
 ## Analysis
@@ -92,7 +96,7 @@ plot1
 
 # Remember to change the variables used in your model and inline_text 
 
-model1 = lm(EAR_DIRt ~ IRI_DIRt, DF)
+model1 = lm(DEMOGR_edad_DIRd ~ SBS_DIRt, DF)
 
 table_model = gtsummary::tbl_regression(model1, intercept = TRUE) %>% 
   # add_global_p() %>%
@@ -106,6 +110,6 @@ table_model
 
 paste0("IRI was not a significant predictor of EAR", 
        ", beta = ", 
-       gtsummary::inline_text(table_model, variable = IRI_DIRt))
+       gtsummary::inline_text(table_model, variable = SBS_DIRt))
 
 ```
