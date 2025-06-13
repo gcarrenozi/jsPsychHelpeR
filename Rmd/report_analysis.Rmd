@@ -1,0 +1,163 @@
+---
+title: "Tarea Final de Seminario en R. 'Reporte de Análisis"
+output: 
+  html_document:
+    toc: yes
+editor_options: 
+  chunk_output_type: consolecrdewe..69676.,77,,,
+params:
+  last_task: ""
+  pid_report: 0
+---
+
+```{r setup, include=FALSE, message = FALSE, echo=FALSE, results='asis'}
+
+# knitr::opts_chunk$set(echo = TRUE)
+
+# DEBUG #DESCOMENTAR, CORRER Y VOLVER A COMENTAR.
+  # Makes sure all libraries and functions are available to work interactivelly
+  # targets::tar_load_globals() # Loads all libraries
+
+# Loads DF_analysis
+targets::tar_load(DF_analysis)
+
+# In this document you will find a template to run analysis, plots, and tables
+# You will need to adapt to the contents of your DF_analysis
+# names(DF_analysis$DF_analysis) # Show variable names in DF_analysis
+
+```
+
+## Introducción
+
+La Escala de Creencias Sobrenaturales (SBS) evalúa la tendencia de una persona a creer en entidades sobrenaturales, lugares de otro mundo y eventos milagrosos. La escala se centra en el aspecto cognitivo de la religiosidad, midiendo la disposición a creer en fenómenos como dioses, fantasmas, reencarnación, entre otros.
+
+### Objetivo del Estudio. 
+
+El objetivo principal del estudio fue efectuar modelo de regresión lineal el cual valorase la predicción de la edad de los participantes a partir del puntaje obtenido en el Test SBS. Secundariamente se efectuó un análisis descriptivo del puntaje SBS en relación de la edad.
+
+### Hipótesis
+
+El puntaje obtenido en la escala SBS permite predecir linealmente la edad de los participantes.
+
+## Preparación de los Datos
+
+Descripción del proceso de preparación de datos.
+
+```{r data-preparation, message = FALSE, echo=FALSE, results='asis'}
+
+DF =
+ DF_analysis$DF_analysis %>% 
+  
+  # Update with your variable names
+  select(id, ends_with("_DIRd"), ends_with("_DIRt"))
+  
+  # Continue your data preparation, if needed
+  #   filter() %>% 
+  #   drop_na()
+
+
+```
+
+## Tabla Descriptiva
+
+Podemos observcar un análisis descriptivo de variables edad y Puntaje SBS (Ver. tabla 1).
+
+```{r descriptive-table, message = FALSE, echo=FALSE, results='asis'}
+
+table1 <- DF |>
+  # Convertir DEMOGR_genero_DIRd en factor con etiquetas claras
+  mutate(
+    DEMOGR_genero_DIRd = factor(
+      DEMOGR_genero_DIRd,
+      levels = c(0, 1, 2),
+      labels = c("Masculino", "Femenino", "No Binario"), #actualiza los labels originales. 
+    ),
+    DEMOGR_edad_DIRd = as.numeric(DEMOGR_edad_DIRd)
+  ) |> 
+  dplyr::select(where(is.numeric), -id, DEMOGR_genero_DIRd, -Consent_DIRt, -DEMOGR_comuna_DIRd) |> 
+  gtsummary::tbl_summary(
+    by = DEMOGR_genero_DIRd,  # Cambia las etiquetas  0, 1, 2 por su respectivo en género.
+    type = list(everything() ~ 'continuous'),
+    statistic = list(all_continuous() ~ "{mean} ± {sd}"),
+    digits = list(all_continuous() ~ 1),  #Con esto van los decimales
+    label = list(#actualiza los labels de la tabla.
+      DEMOGR_edad_DIRd ~ "Edad",
+      SBS_DIRt ~ "Puntaje SBS"
+    )
+  ) |>
+  modify_caption("Tabla 1")
+
+table1
+
+```
+
+## Plots
+
+Podemos observar la distribución de puntajes obtenido en SBS según género (Figura 1). Los participantes de sexo femenino presentaron mayor puntaje SBS.
+
+```{r plots, message = FALSE, echo=FALSE, results='asis'}
+
+# Remember to change the variables in your plot
+
+# plot1 =
+#   DF %>%
+#   ggplot(aes(SBS_DIRt, DEMOGR_genero_DIRd)) +
+#   geom_jitter() +
+#   geom_smooth(method = "lm")
+# 
+# plot1
+
+
+  ggplot(DF, aes(DEMOGR_genero_DIRd, SBS_DIRt)) + 
+    geom_violin(alpha = .2, aes(fill = DEMOGR_genero_DIRd), draw_quantiles = .5) +
+    geom_jitter(alpha = .1, height = 0, width = .2)+
+    scale_fill_discrete(
+      name = "Género",
+      labels = c("Masculino", "Femenino", "No binario")
+    )+
+    xlab("Género")+
+    ylab("Puntaje SBS")+
+    labs(title = "Figura 1")+
+    theme(axis.text.x = element_blank())
+```
+
+## Análisis
+
+Se construyó un modelo lineal utilizando un único predictor para obtener la Edad a partir del puntaje SBS (ver tabla 2).
+
+```{r analysis, message = FALSE, echo=FALSE, results='asis'}
+
+# Remember to change the variables used in your model and inline_text 
+attr(DF$SBS_DIRt, "label") <- "Puntaje SBS" #Con esto renombro para la tabla el label SBS_DIRt con Puntaje SBS
+model1 = lm(DEMOGR_edad_DIRd ~ SBS_DIRt, DF)
+
+table_model = gtsummary::tbl_regression(model1, intercept = TRUE) %>% 
+  # add_global_p() %>%
+  bold_labels() %>% 
+  italicize_levels() %>% 
+  modify_caption("Tabla 2") %>%
+  add_glance_table(include = c("nobs", "df.residual", "r.squared", "adj.r.squared")
+                   )
+
+table_model
+
+cat("\n\n\n\n\n") #genero cinco "enter"
+```
+
+## Discusión
+
+El modelo creado se basa en la premisa que el puntaje SBS podría predecir la edad de los participantes.
+
+```{r, message = FALSE, echo=FALSE, results='asis'}
+# report::report(model1)
+texto <- paste0(
+  "Considerando lo anterior, el puntaje SBS no fue un buen predictor para la Edad, ",
+  "beta = ", 
+  gtsummary::inline_text(table_model, variable = SBS_DIRt)
+)
+
+#cat("\n", texto, "\n") #Genero un "enter"
+writeLines(c("", texto, ""))
+```
+
+\
